@@ -1,0 +1,29 @@
+#!/bin/bash -x
+
+
+module load vcftools/0.1.17
+module load samtools-1.9
+
+export inpath=/mnt/home/usr/infiles
+
+export outpath=/mnt/home/usr/outfiles
+mkdir -p $outpath
+chmod u+rwx $outpath
+export reference=/mnt/home/usr/references/refseq.fasta
+
+
+
+for file in $inpath/*.vcf ;
+do
+        echo $file
+        bname=$(basename $file)
+        echo "base name is $bname"
+        bfile=$inpath/$bname".gz"
+        outfile=$outpath/$bname".fasta"
+        bgzip -c $file > $bfile
+        tabix -p vcf $bfile
+        cat $reference | vcf-consensus $bfile > $outfile
+
+done
+
+cat $outpath/*.fasta > concatenated.fasta
