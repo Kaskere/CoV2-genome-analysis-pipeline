@@ -1,0 +1,58 @@
+
+#!/bin/bash
+#PBS -N samtools
+#PBS -q batch
+#PBS -l walltime=72:00:00
+#PBS -l feature=best_nodes_in_your_server
+#PBS -j oe
+####PBS -A pile_up
+#PBS -o job
+
+### Switch to the working directory; by default TORQUE launches processes from your home directory.
+cd $PBS_O_WORKDIR
+echo Working directory is $PBS_O_WORKDIR
+
+# Calculate the number of processors allocated to this run.
+NPROCS=`wc -l < $PBS_NODEFILE`
+#### PBS_NUM_PPN        Number of procs per node allocated to the job
+module load bio/samtools/1.10
+module load java/java-1.8.0
+
+export INPATH=/mnt/home/usr/infiles
+export OUTPATH=/mnt/home/usr/outfiles
+
+export reference=/mnt/home/usr/references/refseq.fasta
+samtools faidx $reference
+#creates piled txt files for further Varscan variant calling
+for file in $INPATH/*.bam ;
+do
+
+        sample=$(basename $file ".bam")
+        echo sample: $sample
+        MISEQ_V_PILED=$OUTPATH/$sample.SNPs.varscan.tsv
+        samtools mpileup -A -E -f $reference $file > $OUTPATH/$sample.mpileup
+ done
+
+for file in $OUTPATH/*.mpileup ;
+do
+        echo $file
+        sample=$(basename $file ".mpileup")
+        outfile=$OUTPATH/$sample".snp.vcf"
+        outfile1=$OUTPATH/$sample".snp.txt"
+        outfile3=$OUTPATH/$sample".indel.vcf"
+        outfile4=$OUTPATH/$sample".indel.txt"
+      
+        echo sample: $sample
+        #creates both snp and indel calls
+        java -jar /mnt/home/usr/tools/VarScan.v2.3.9.jar mpileup2snp $file -@ ${PBS_NUM_PPN}  --p-value 1 --output-vcf 1 > \
+$OUTPATH/$outfile
+        java -jar /mnt/home/usr/tools/VarScan.v2.3.9.jar mpileup2snp $file -@ ${PBS_NUM_PPN}  --p-value 1 --output-vcf 1 > \
+$OUTPATH/$outfile1
+         java -jar /mnt/home/usr/tools/VarScan.v2.3.9.jar mpileup2indel $file -@ ${PBS_NUM_PPN}  --p-value 1 --output-vcf 1 \
+> $OUTPATH/$outfile3
+        java -jar /mnt/home/usr/tools/VarScan.v2.3.9.jar mpileup2indel $file -@ ${PBS_NUM_PPN}  --p-value 1 --output-vcf 1 > \
+$OUTPATH/$outfile4
+
+done
+
+
