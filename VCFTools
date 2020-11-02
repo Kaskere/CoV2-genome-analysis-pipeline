@@ -1,0 +1,30 @@
+#!/bin/bash -x
+
+
+export inpath=/mnt/home/usr/infiles
+
+export outpath=/mnt/home/usr/outfiles
+mkdir -p $outpath
+chmod u+rwx $outpath
+cd /mnt/home/usr/tools/vcftools/0.1.16-18/bin
+for file in $inpath/*.gz ;
+do
+        echo "Working with file $file"
+        bname=$(basename $file)
+        echo "base name is $bname"
+        outfile=$outpath/$bname".filtered1"
+        echo outfile is $outfile
+
+
+        ./vcftools --gzvcf $file \
+        --minGQ 20.0 \
+        --maf 0.9 \
+        --recode --out $outfile
+        for file1 in $outpath/*.vcf
+        do
+                outfile1=$outpath/$bname".filtered"
+                export PERL5LIB=/mnt/home/usr/tools/vcftools/0.1.16-18/share/perl5
+                ./vcf-annotate --filter Q=30/q=0.4/d=2 $file1 > $outfile1
+        done
+done
+
