@@ -1,0 +1,39 @@
+#!/bin/bash -x
+#PBS -N bwa_job
+#PBS -q batch
+#PBS -l walltime=72:00:00
+#PBS -l feature=fastest_nodes_on_your_server
+#PBS -l nodes=1:ppn=4
+#PBS -j oe
+#PBS -A your_job
+
+#bwa script for more than two reads per sample, that needs to be merged or piled after
+INPATH=/mnt/home/infiles
+OUTPATH=/mnt/home/outfiles
+mkdir -p $OUTPATH
+
+reference=/mnt/home/user/references/refseq.fasta
+cd /mnt/home/usr/tools/bwa-0.7.17
+./bwa index $reference
+
+shopt -s nullglob
+for dir in $INPATH{/,/*} ;
+do
+        echo dir is $dir
+        for file in $dir/*.gz ;
+        do
+                #define sample ID for including in the read group
+                ID=$(basename $dir)
+                echo ID is $ID
+                bname=$(basename $file )
+                sample=$( cut -d'_' -f 1,2,3<<<"$bname")
+                echo bname sample is $bname $sample
+                input1=$dir/$sample"_1.paired.fq.gz"
+                input2=$dir/$sample"_2.paired.fq.gz"
+                outfile=$OUTPATH/$ID".sam"
+                #check sample names before pairing
+                echo input1 is  $input1 output1 is $output1 input2 is $input2 output $output2
+                /mnt/home/usr/tools/bwa-0.7.17 mem -R "@RG\tID:1\tLB:1\tPL:MGI\tPU:1\tSM:$ID" $reference $input1 $input2 > $outfile
+                echo $outfile
+        done
+done
