@@ -1,0 +1,32 @@
+#!/bin/bash -x
+
+#PBS -N deepvariant
+#PBS -q batch
+#PBS -l walltime=72:00:00
+#PBS -o job
+
+###Switch to the working directory; by default TORQUE launches processes from your home directory.
+cd $PBS_O_WORKDIR
+echo Working directory is $PBS_O_WORKDIR
+
+module load bio/deepvariant/1.0.0
+export INPATH=/mnt/home/usr/infiles
+export OUTPATH=/mnt/home/usr/outfiles
+mkdir -p $OUTPATH
+chmod u+rwx $OUTPATH
+export reference=/mnt/home/usr/references/refseq.fasta
+export logdir=/mnt/home/usr/deepvariant/logs
+for file in $INPATH/*.bam ;
+do
+        sample=$(basename $file ".bam")
+        echo sample: $sample
+        log=$logdir/$sample".log"
+        echo log: $log
+        singularity exec $deepvariant  /opt/deepvariant/bin/run_deepvariant \
+        --model_type=WGS \
+        --ref "$reference" \
+        --reads "$file" \
+        --output_vcf "$OUTPATH/$sample.vcf.gz" \
+        --output_gvcf "$OUTPATH/$sample.g.vcf.gz" | tee $log
+
+done
