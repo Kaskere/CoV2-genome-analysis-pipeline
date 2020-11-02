@@ -1,0 +1,19 @@
+
+#!/bin/sh -x
+#PBS -N fastqc_job
+#PBS -q long
+#PBS -l walltime=336:00:00
+#PBS -l nodes=1:ppn=4
+#PBS -j oe
+#PBS -A jobname
+
+
+INPATH=/home/inpath
+OUTPATH=/home/outpath
+mkdir -p $OUTPATH
+chmod u+rwx $OUTPATH
+
+for file in $INPATH/*.fastq.gz;
+do
+    /home/usr/tools/pathtofastqc/fastqc $file --outdir $OUTPATH -t 4
+done
