@@ -1,0 +1,36 @@
+#!/bin/bash
+
+### Switch to the working directory; by default TORQUE launches processes from your home directory.
+cd $PBS_O_WORKDIR
+echo Working directory is $PBS_O_WORKDIR
+
+module load lofreq/2.1.5
+
+export reference=/mnt/home/usr/references/refseq.fasta
+
+export INPATH=/mnt/home/usr/infiles
+export OUTPATH1=mnt/home/usr/indelquals
+export OUTPATH=/mnt/home/usr/outfiles
+mkdir -p $OUTPATH
+chmod g+rwx $OUTPATH
+mkdir -p $OUTPATH1
+chmod u+rwx $OUTPATH1
+#mkdir -p $inpath1
+#chmod u+rwx $inpath1
+
+for file in $INPATH/*.bam ;
+do
+        echo $bname
+        bname=$(basename $file )
+        sample=$(basename $bname)
+        echo bname sample is $bname $sample
+        outfile1=$OUTPATH1/$sample"indelqual.bam"
+        outfile=$OUTPATH/$sample".vcf"
+        echo file: $file outfiles are $outfile1 and $outfile
+        lofreq indelqual --dindel -f $reference $file > $outfile1
+        lofreq index $outfile1
+        echo indexed is $outfile1
+        lofreq call -f $reference -o $outfile --call-indels $outfile1
+        echo $outfile is ready
+done
+
