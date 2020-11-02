@@ -1,0 +1,37 @@
+
+#!/bin/bash -x
+#PBS -N trimmomatics_job
+#PBS -q batch
+#PBS -l walltime=72:00:00
+#PBS -l nodes=1:ppn=4,mem=40gb
+#PBS -W x=naccesspolicy:UNIQUEUSER
+#PBS -j oe
+#PBS -A your_job
+
+module load java
+cd /home/pathtoTrimmomatic
+
+INPATH=/home/infiles
+OUTPATH=/home/outfiles
+mkdir -p $OUTPATH
+
+
+for file in $INPATH/*.fq.gz
+do
+        bname=$(basename $file '_1.fq.gz')
+        echo "file: "$file
+        echo $bname
+        input1=$INPATH/$bname"_1.fq.gz"
+        input2=$INPATH/$bname"_2.fq.gz"
+        output1=$OUTPATH/$bname"_1.paired.fq.gz"
+        output2=$OUTPATH/$bname"_1.unpaired.fq.gz"
+        output3=$OUTPATH/$bname"_2.paired.fq.gz"
+        output4=$OUTPATH/$bname"_2.unpaired.fq.gz"
+        echo $input1 $input2
+        java -jar trimmomatic-0.39.jar PE  -phred33 \
+            "$input1" "$input2" "$output1" "$output2" "$output3" "$output4" \
+            ILLUMINACLIP:BGI_Adapters.fa:2:30:10 \
+            LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+done
+
+
