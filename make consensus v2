@@ -1,0 +1,33 @@
+#!/bin/bash -x
+
+
+module load bcftools/1.10.2
+module load samtools-1.9
+
+export inpath=/mnt/home/usr/infiles
+
+export outpath=/mnt/home/usr/outfiles
+export outpath1=/mnt/home/usr/indexed_files
+mkdir -p $outpath
+chmod u+rwx $outpath
+mkdir -p $outpath1
+chmod u+rwx $outpath1
+
+export reference=/mnt/home/usr/references/refseq.fasta
+
+
+samtools faidx -f $reference
+for file in $inpath/*.vcf ;
+do
+        echo $file
+        bname=$(basename $file)
+        echo "base name is $bname"
+        bfile=$outpath1/$bname".gz"
+        outfile=$outpath/$bname".fasta"
+        bgzip -c $file > $bfile
+        bcftools index $bfile
+        cat $reference | bcftools consensus $bfile > $outfile
+done
+
+
+cat outpath/*. fasta > concatenated.fasta
