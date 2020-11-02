@@ -1,0 +1,83 @@
+#!/bin/bash -x
+
+#PBS -N samtools
+#PBS -q batch
+#PBS -l walltime=72:00:00
+#PBS -l feature=fastest_nodes
+#PBS -j oe
+####PBS -A samtools
+#PBS -o job
+
+### Switch to the working directory; by default TORQUE launches processes from your home directory.
+cd $PBS_O_WORKDIR
+# echo Working directory is $PBS_O_WORKDIR
+
+# Calculate the number of processors allocated to this run.
+NPROCS=`wc -l < $PBS_NODEFILE`
+#### PBS_NUM_PPN        Number of procs per node allocated to the job
+module load samtools-1.9
+
+export reference=/mnt/home/usr/references/refseq.fasta
+export INPATH=/mnt/usr/infiles
+export INPATH1=/mnt/usr/dir1
+mkdir -p $INPATH1
+export INPATH2=/mnt/usr/dir2
+mkdir -p $INPATH2
+export INPATH3/mnt/usr/dir3
+mkdir -p $INPATH3
+export INPATH4=/mnt/usr/dir3
+mkdir -p $INPATH4
+export INPATH5=/mnt/usr/dir4
+mkdir -p $INPATH5
+export BAM=/mnt/usr/dir6_pathtoBAM
+mkdir -p $BAM
+export INPATH7=/mnt/usr/dir7
+mkdir -p $INPATH7
+export INPATH8=/mnt/usr/dir8
+mkdir -p $INPATH8
+export INPATH9=/mnt/usr/dir9
+mkdir -p $INPATH9
+
+shopt -s nullglob
+for dir in $INPATH{/,/*} ;
+do
+for file in $dir/*.sam ;
+do
+
+        echo inpath $INPATH
+        bname=$(basename $file ".sam")
+        dirname=$(basename $dir)
+        echo dirname: $dir
+        echo bname: $bname
+        outpath=$BAM/$dirname
+        echo outpath: $outpath
+        mkdir -p $outpath
+        chmod u+rwx $outpath
+        echo dir: $dir
+        echo inpath $INPATH
+        bname=$(basename $file ".sam")
+        echo $bname
+        bamfile=$INPATH1/$bname"bam1.bam"
+        namesort=$INPATH2/$bname"_sorted.bam"
+        fixmate=$INPATH4/$bname"_sorted_fixmate.bam"
+        positionsort=$INPATH5/$bname"_sorted_fixmate_position.bam"
+        markdup=$outpath/$bname".bam"
+        stats=$INPATH8/$bname".txt"
+
+        echo $file
+        samtools view -bT $reference $file > $bamfile
+        echo $bamfile
+        samtools sort -n -@ ${PBS_NUM_PPN} $bamfile > $namesort
+        echo $namesort
+        samtools fixmate -m -@ ${PBS_NUM_PPN} $namesort $fixmate
+        echo $fixmate
+        samtools sort -@ ${PBS_NUM_PPN} $fixmate > $positionsort
+        echo $positionsort
+        samtools markdup -@ ${PBS_NUM_PPN} $positionsort $markdup
+        echo $markdup
+        samtools index -@ ${PBS_NUM_PPN} $markdup
+        echo $markdup
+        samtools flagstat $markdup > $stats
+        echo $stats
+done
+done
