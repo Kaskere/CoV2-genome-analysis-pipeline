@@ -1,5 +1,5 @@
 # bioinformatics-pipeline
-A set of shell scripts for NGS data analysis. 
+A set of shell scripts for CoV2 analysis. 
 Scripts are originally written for BGI, but can be easily adapted for Illumina.
 
 All the used tools can be downloaded here:
