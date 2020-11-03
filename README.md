@@ -2,7 +2,7 @@
 A set of shell scripts for NGS data analysis. 
 Scripts are originally written for BGI, but can be easily adapted for Illumina.
 
-All the used tools can be downloaded here. 
+All the used tools can be downloaded here:
 These can be browsed from your local tool directory or as modules (second one is better option,but you need to contact your admin first)  
 Before using a particular tool, check the version compatibility with other tools
 
