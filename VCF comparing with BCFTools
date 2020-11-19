@@ -1,0 +1,35 @@
+#!i/bin/bash -x
+
+module load bio/bcftools/1.10.2
+module load bio/samtools-1.9
+
+PATH1=/mnt/home/groups/inpath1
+PATH2=/mnt/home/groups/inpath2
+
+
+OUTPATH=/mnt/home/outpath
+mkdir -p $OUTPATH
+chmod u+rwx $OUTPATH
+
+for file1 in $PATH/*.vcf ;
+do
+        for file2 in PATH2/*.vcf ;
+        do
+                bname1=$(basename $file1 '.vcf')
+           
+                bname2=$(basename $file2 '.vcf')
+               
+                if [ "$bname1" == "$bname2" ]; then
+
+                bgzip -c $file1 > $bname1"_1.gz"
+                bgzip -c $file2 > $bname2"_2.gz"
+                tabix -f -p vcf $bname1"_1.gz"
+                tabix -f -p vcf $bname2"_2.gz"
+                bcftools isec  $bname1"_1.gz"  $bname2"_2.gz" -p $OUTPATH/$bname1".compared"
+                else
+                true
+                fi
+        done
+done
+
+
