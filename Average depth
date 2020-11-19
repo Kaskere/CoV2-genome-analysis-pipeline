@@ -1,0 +1,17 @@
+
+#!/bin/bash -x
+
+
+module load bio/samtools-1.9
+export reference=/mnt/home/usr/ref.fasta
+
+export INPATH=/mnt/home/indir
+export OUTPATH=/mnt/home/outdir
+mkdir -p $OUTPATH
+chmod u+rwx $OUTPATH
+
+for file in $INPATH/*.bam ;
+do
+        
+        samtools depth  $file  |  awk '{sum+=$3} END { print "Average = ",sum/NR}'
+done
